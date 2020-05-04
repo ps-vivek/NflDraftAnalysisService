@@ -2,7 +2,7 @@ package com.nfl.draftAnalyzer.dto;
 
 public enum ProspectInfoColumns {
 
-	PLAYER(0), COLLEGE(1), STATUS(2), POSITION(3), TEAM(4), CLASS(5), GRADE(6);
+	PLAYER(0), COLLEGE(1), STATUS(2), POSITION(3), TEAM(4), CLASS(5), GRADE(6), CONFERENCE(7);
 
 	private int val;
 

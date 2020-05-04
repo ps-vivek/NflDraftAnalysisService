@@ -32,7 +32,7 @@ public class FileUtils implements DraftAnalyzerConstants {
 	 * @param headerNames
 	 * @param noOfRowsToCombine
 	 */
-	public static List<List<String>> fetchExcelData(String fileName, List<String> headerNames, int noOfRowsToCombine) {
+	public static List<List<String>> fetchExcelData(String fileName, List<String> headerNames) {
 		List<List<String>> mergedData = new ArrayList<>();
 		List<String> dataToBeMerged = new ArrayList<String>();
 		Workbook workbook = null;
@@ -44,12 +44,11 @@ public class FileUtils implements DraftAnalyzerConstants {
 			Iterator<Row> iterator = sheet.iterator();
 
 			mergedData.add(headerNames);
-			int rowCount = 0;
 
 			while (iterator.hasNext()) {
 				Row currentRow = iterator.next();
 				Iterator<Cell> cellIterator = currentRow.iterator();
-				rowCount = rowCount < noOfRowsToCombine ? rowCount + 1 : 1;
+
 				while (cellIterator.hasNext()) {
 					Cell currentCell = cellIterator.next();
 					if (currentCell.getCellType() == CellType.STRING) {
@@ -58,10 +57,10 @@ public class FileUtils implements DraftAnalyzerConstants {
 						dataToBeMerged.add(currentCell.getNumericCellValue() + "");
 					}
 				}
-				if (rowCount == noOfRowsToCombine) {
-					mergedData.add(dataToBeMerged);
-					dataToBeMerged = new ArrayList<String>();
-				}
+
+				mergedData.add(dataToBeMerged);
+				dataToBeMerged = new ArrayList<String>();
+
 			}
 
 		} catch (Exception e) {

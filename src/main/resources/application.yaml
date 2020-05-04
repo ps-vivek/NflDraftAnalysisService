@@ -1,8 +1,9 @@
 draft:
   draftFilesByYear:
-    2020: Nfl_Prospect_Grades_2020.xlsx
-    2019: Nfl_Prospect_Grades_2019.xlsx
-    2018: Nfl_Prospect_Grades_2018.xlsx
+    2020: Nfl_Draft_Prospects_2020.xlsx
+    2019: Nfl_Draft_Prospects_2019.xlsx
+    2018: Nfl_Draft_Prospects_2018.xlsx
+    2017: Nfl_Draft_Prospects_2017.xlsx
   teams:
     - Arizona Cardinals
     - Atlanta Falcons

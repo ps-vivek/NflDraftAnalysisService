@@ -104,7 +104,8 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 	private MultiValueMap<String, Double> fetchTotalProspectGradeByTeam(List<String> validTeams, String fileName,
 			MultiValueMap<String, String> playersDraftedByTeam) {
 		MultiValueMap<String, Double> totalProspectGradesByTeam = new LinkedMultiValueMap<>();
-		for (List<String> prospectInfo : FileUtils.fetchExcelData(fileName, list, NO_OF_ROWS_TO_COMBINE)) {
+
+		for (List<String> prospectInfo : FileUtils.fetchExcelData(fileName, DRAFT_PROSPECT_FILE_HEADERS)) {
 			String team = prospectInfo.get(ProspectInfoColumns.TEAM.getValue());
 
 			if (validTeams.contains(team)) {
@@ -119,7 +120,10 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 				}
 
 			}
+
+			
 		}
+		
 		return totalProspectGradesByTeam;
 	}
 
