@@ -51,6 +51,7 @@ public class FileUtils implements DraftAnalyzerConstants {
 
 				while (cellIterator.hasNext()) {
 					Cell currentCell = cellIterator.next();
+					
 					if (currentCell.getCellType() == CellType.STRING) {
 						dataToBeMerged.add(currentCell.getStringCellValue());
 					} else if (currentCell.getCellType() == CellType.NUMERIC) {

@@ -1,9 +1,12 @@
+server:
+  port: 9595
 draft:
   draftFilesByYear:
     2020: Nfl_Draft_Prospects_2020.xlsx
     2019: Nfl_Draft_Prospects_2019.xlsx
     2018: Nfl_Draft_Prospects_2018.xlsx
     2017: Nfl_Draft_Prospects_2017.xlsx
+    2016: Nfl_Draft_Prospects_2016.xlsx
   teams:
     - Arizona Cardinals
     - Atlanta Falcons
@@ -22,6 +25,7 @@ draft:
     - Jacksonville Jaguars
     - Kansas City Chiefs
     - Los Angeles Chargers
+    - San Diego Chargers
     - Los Angeles Rams
     - Las Vegas Raiders
     - Miami Dolphins
