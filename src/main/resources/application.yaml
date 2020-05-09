@@ -7,6 +7,7 @@ draft:
     2018: Nfl_Draft_Prospects_2018.xlsx
     2017: Nfl_Draft_Prospects_2017.xlsx
     2016: Nfl_Draft_Prospects_2016.xlsx
+    2015: Nfl_Draft_Prospects_2015.xlsx
   teams:
     - Arizona Cardinals
     - Atlanta Falcons
@@ -27,6 +28,7 @@ draft:
     - Los Angeles Chargers
     - San Diego Chargers
     - Los Angeles Rams
+    - St. Louis Rams
     - Las Vegas Raiders
     - Miami Dolphins
     - Minnesota Vikings
