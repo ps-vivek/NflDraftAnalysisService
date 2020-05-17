@@ -47,9 +47,12 @@ https://www.nfl.com/draft/tracker/prospects/QB?college=allColleges&page=1&status
 Set up needed for running the project
 --------------------------------------
 •	Clone the project from GIT and run in an IDE environment like eclipse. Minimum of JDK 8 is required to run the project.
+--------------------------------------
 •	The project has mysql for db operations. Ensure the connections are set up properly and corresponding properties are updated in application.yaml. Ensure that the below script is run:
+--------------------------------------
 https://github.com/ps-vivek/NflDraftAnalysisService/blob/master/src/main/resources/sqls/Create_Nfl_Draft_Prospect_Info.sql
-	Once above steps are performed, then run the standalone spring boot app.
+--------------------------------------
+Once above steps are performed, then run the standalone spring boot app.
 
 For reading more about the APIs available, please have a look at the below resource:
 ----------------------------------------------------------------------------------------------
