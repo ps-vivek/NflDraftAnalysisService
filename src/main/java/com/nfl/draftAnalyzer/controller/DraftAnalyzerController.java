@@ -37,15 +37,13 @@ public class DraftAnalyzerController implements DraftAnalyzerConstants {
 		ByteArrayResource resource = null;
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_VALUE, year));
-		try {
-			resource = service.findAverageDraftGradesForAllRounds(year, team);
-			if(resource==null)
-				throw new Exception("No records found for the given year");
-		} catch (Exception e) {
-			log.error("Failure in finding average draft grades. Message:" + e.getLocalizedMessage());
-			 return new ResponseEntity<>(null, null, HttpStatus.NOT_FOUND);
-		}
-		log.info("Exited DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
+	
+			try {
+				resource = service.findAverageDraftGradesForAllRounds(year, team);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			log.info("Exited DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		return ResponseEntity.ok().headers(headers).contentLength(resource.contentLength())
 				.contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE)).body(resource);
 
