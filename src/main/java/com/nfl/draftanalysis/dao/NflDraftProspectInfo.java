@@ -1,4 +1,4 @@
-package com.nfl.draftAnalyzer.dao;
+package com.nfl.draftanalysis.dao;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

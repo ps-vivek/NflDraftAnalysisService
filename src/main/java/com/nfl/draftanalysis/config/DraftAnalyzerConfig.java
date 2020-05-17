@@ -1,4 +1,4 @@
-package com.nfl.draftAnalyzer.config;
+package com.nfl.draftanalysis.config;
 
 import java.util.ArrayList;
 import java.util.HashMap;

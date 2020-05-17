@@ -1,5 +1,6 @@
-package com.nfl.draftAnalyzer.service;
+package com.nfl.draftanalysis.service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,22 +23,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import com.nfl.draftAnalyzer.config.DraftAnalyzerConfig;
-import com.nfl.draftAnalyzer.constants.DraftAnalyzerConstants;
-import com.nfl.draftAnalyzer.dao.NflDraftProspectInfo;
-import com.nfl.draftAnalyzer.dto.AverageProspectGradeInfo;
-import com.nfl.draftAnalyzer.dto.AverageProspectGradeMapping;
-import com.nfl.draftAnalyzer.dto.ProspectInfoMapping;
-import com.nfl.draftAnalyzer.exception.DraftDataNotFoundException;
-import com.nfl.draftAnalyzer.exception.InvalidNflTeamException;
-import com.nfl.draftAnalyzer.repo.NflDraftProspectInfoRepo;
-import com.nfl.draftAnalyzer.util.FileUtils;
+import com.nfl.draftanalysis.config.DraftAnalyzerConfig;
+import com.nfl.draftanalysis.constants.DraftAnalyzerConstants;
+import com.nfl.draftanalysis.dao.NflDraftProspectInfo;
+import com.nfl.draftanalysis.dto.AverageProspectGradeInfo;
+import com.nfl.draftanalysis.dto.AverageProspectGradeMapping;
+import com.nfl.draftanalysis.dto.ProspectInfoMapping;
+import com.nfl.draftanalysis.exception.DraftDataNotFoundException;
+import com.nfl.draftanalysis.exception.ExcelReadException;
+import com.nfl.draftanalysis.exception.InvalidNflTeamException;
+import com.nfl.draftanalysis.repo.NflDraftProspectInfoRepo;
+import com.nfl.draftanalysis.util.FileUtils;
 
 import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
-public class DraftAnalyzerService implements DraftAnalyzerConstants {
+public class DraftAnalyzerService {
 
 	@Autowired
 	private DraftAnalyzerConfig draftAnalyzerConfig;
@@ -45,10 +47,16 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 	@Autowired
 	private NflDraftProspectInfoRepo nflDraftProspectInfoRepo;
 
-	private static Map<Integer, List<AverageProspectGradeInfo>> draftDataByYear;
-	private static Map<String, String> averageProspectGradeInfoMapping; 
+	private Map<Integer, List<AverageProspectGradeInfo>> draftDataByYear;
 
-	private Map<String, String> initAvgProspecGradeMap() {
+	private Map<String, String> averageProspectGradeInfoMapping;
+
+	/**
+	 * --Loads the column mapping required for generating the output excel file
+	 * 
+	 * @return
+	 */
+	private Map<String, String> initAverageProspectGradeMapping() {
 		Map<String, String> map = new LinkedHashMap<>();
 		map.put(AverageProspectGradeMapping.TEAM_NAME.name(), AverageProspectGradeMapping.TEAM_NAME.getValue());
 		map.put(AverageProspectGradeMapping.NO_OF_PLAYERS_DRAFTED.name(),
@@ -66,10 +74,14 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 	 */
 	@PostConstruct
 	private void initializeDraftData() {
-		averageProspectGradeInfoMapping = initAvgProspecGradeMap();
+		averageProspectGradeInfoMapping = initAverageProspectGradeMapping();
 		List<String> validTeams = draftAnalyzerConfig.getTeams();
 		draftAnalyzerConfig.getDraftFilesByYear().forEach((year, fileName) -> {
-			insertProspectsDataToDb(year, validTeams, fileName);
+			try {
+				insertProspectsDataToDb(year, validTeams, fileName);
+			} catch (IOException e) {
+				throw new ExcelReadException(DraftAnalyzerConstants.EXCEL_READ_EXCEPTION_MSG + e.getLocalizedMessage());
+			}
 
 		});
 
@@ -110,9 +122,10 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 					/ Double.valueOf(String.valueOf(noOfPlayersDrafted));
 
 			AverageProspectGradeInfo avgProspectGradeInfoByTeam = new AverageProspectGradeInfo(noOfPlayersDrafted,
-					prospectGradeInfoPerTeam.getKey(), Precision.round(avgProspectGradeForTeam, ROUNDING_PRECISION),
+					prospectGradeInfoPerTeam.getKey(),
+					Precision.round(avgProspectGradeForTeam, DraftAnalyzerConstants.ROUNDING_PRECISION),
 					playersDraftedByTeam.get(prospectGradeInfoPerTeam.getKey()).stream()
-							.collect(Collectors.joining(COMMA_DELIMITER)));
+							.collect(Collectors.joining(DraftAnalyzerConstants.COMMA_DELIMITER)));
 			avgProspectGradeInfoByAllTeams.add(avgProspectGradeInfoByTeam);
 		}
 		// Sorting the list based on average grade scored by the team
@@ -141,7 +154,7 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 			if (prospectGrade != null) {
 				totalProspectGradesByTeam.add(prospectInfo.getTeam(), prospectGrade);
 			} else {
-				totalProspectGradesByTeam.add(prospectInfo.getTeam(), DEFAULT_PROSPECT_GRADE);
+				totalProspectGradesByTeam.add(prospectInfo.getTeam(), DraftAnalyzerConstants.DEFAULT_PROSPECT_GRADE);
 			}
 
 		}
@@ -162,24 +175,22 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 		log.info("Entered DraftAnalyzerService::findAverageDraftGradesForAllRounds()");
 
 		if (!draftDataByYear.containsKey(year)) {
-			throw new DraftDataNotFoundException(DRAFT_DATA_NOT_FOUND_EXCEPTION + year);
+			throw new DraftDataNotFoundException(DraftAnalyzerConstants.DRAFT_DATA_NOT_FOUND_EXCEPTION + year);
 		}
 
-		if (!ALL_TEAMS.equalsIgnoreCase(team) && !draftAnalyzerConfig.getTeams().contains(team)) {
-			throw new InvalidNflTeamException(INVALID_NFL_TEAM_EXCEPTION_MSG + team);
+		if (!DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)
+				&& !draftAnalyzerConfig.getTeams().contains(team)) {
+			throw new InvalidNflTeamException(DraftAnalyzerConstants.INVALID_NFL_TEAM_EXCEPTION_MSG + team);
 		}
 
 		ByteArrayResource resource = null;
-		if (ALL_TEAMS.equalsIgnoreCase(team)) {
+		if (DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)) {
 			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
-					draftDataByYear.get(year), AverageProspectGradeInfo.class);
+					draftDataByYear.get(year));
 		} else {
 			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
-					draftDataByYear.get(year).stream()
-							.filter(avgProspectGradeInfoByTeam -> avgProspectGradeInfoByTeam.getTeamName()
-									.equalsIgnoreCase(team))
-							.collect(Collectors.toList()),
-					AverageProspectGradeInfo.class);
+					draftDataByYear.get(year).stream().filter(avgProspectGradeInfoByTeam -> avgProspectGradeInfoByTeam
+							.getTeamName().equalsIgnoreCase(team)).collect(Collectors.toList()));
 		}
 
 		log.info("Exited DraftAnalyzerService::findAverageDraftGradesForAllRounds()");
@@ -193,19 +204,22 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 	 * @param year
 	 * @param validTeams
 	 * @param fileName
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 * @throws NumberFormatException
 	 */
-	private void insertProspectsDataToDb(int year, List<String> validTeams, String fileName) {
+	private void insertProspectsDataToDb(int year, List<String> validTeams, String fileName) throws IOException {
 
-		boolean recordsPresent = nflDraftProspectInfoRepo.countByYear(year) > 0 ? true : false;
+		boolean recordsPresent = nflDraftProspectInfoRepo.countByYear(year) > 0;
 		if (!recordsPresent) {
-			List<NflDraftProspectInfo> nflDraftProspectInfos = new ArrayList<NflDraftProspectInfo>();
+			List<NflDraftProspectInfo> nflDraftProspectInfos = new ArrayList<>();
 			for (List<String> prospectInfo : FileUtils.fetchExcelData(fileName)) {
 				if (validTeams.contains(prospectInfo.get(ProspectInfoMapping.TEAM.getValue()))) {
 					NflDraftProspectInfo nflDraftProspectInfo = new NflDraftProspectInfo();
 					nflDraftProspectInfo
 							.setGrade(NumberUtils.isParsable(prospectInfo.get(ProspectInfoMapping.GRADE.getValue()))
 									? Double.valueOf(prospectInfo.get(ProspectInfoMapping.GRADE.getValue()))
-									: DEFAULT_PROSPECT_GRADE);
+									: DraftAnalyzerConstants.DEFAULT_PROSPECT_GRADE);
 					nflDraftProspectInfo.setCollege(prospectInfo.get(ProspectInfoMapping.COLLEGE.getValue()));
 					nflDraftProspectInfo.setCollegeClass(prospectInfo.get(ProspectInfoMapping.CLASS.getValue()));
 					nflDraftProspectInfo.setConference(prospectInfo.get(ProspectInfoMapping.CONFERENCE.getValue()));

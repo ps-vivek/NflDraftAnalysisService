@@ -1,4 +1,4 @@
-package com.nfl.draftAnalyzer.dto;
+package com.nfl.draftanalysis.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

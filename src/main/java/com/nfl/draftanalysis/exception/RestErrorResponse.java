@@ -1,4 +1,4 @@
-package com.nfl.draftAnalyzer.exception;
+package com.nfl.draftanalysis.exception;
 
 import java.time.LocalDateTime;
 

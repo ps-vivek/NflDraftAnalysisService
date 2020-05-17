@@ -1,7 +1,8 @@
-package com.nfl.draftAnalyzer.util;
+package com.nfl.draftanalysis.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -22,25 +23,29 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.ReflectionUtils;
 
-import com.nfl.draftAnalyzer.constants.DraftAnalyzerConstants;
-import com.nfl.draftAnalyzer.exception.ExcelReadException;
-import com.nfl.draftAnalyzer.exception.ExcelWriteException;
+import com.nfl.draftanalysis.constants.DraftAnalyzerConstants;
+import com.nfl.draftanalysis.exception.ExcelWriteException;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-public class FileUtils implements DraftAnalyzerConstants {
+@UtilityClass
+public class FileUtils {
 
 	/**
 	 * Reads data from excel file. It is assumed that first row of the excel data
 	 * contains the headers. It is also assumed that excel contains only one sheet
 	 * 
 	 * @param fileName
+	 * @throws IOException
+	 * @throws FileNotFoundException
 	 */
-	public static List<List<String>> fetchExcelData(String fileName) {
+	public static List<List<String>> fetchExcelData(String fileName) throws IOException {
 		List<List<String>> mergedData = new ArrayList<>();
-		List<String> dataToBeMerged = new ArrayList<String>();
+		List<String> dataToBeMerged = new ArrayList<>();
 
 		try (FileInputStream excelFile = new FileInputStream(new ClassPathResource(fileName).getFile())) {
 
@@ -51,7 +56,7 @@ public class FileUtils implements DraftAnalyzerConstants {
 
 				while (iterator.hasNext()) {
 					Row currentRow = iterator.next();
-					if (currentRow.getRowNum() == HEADER_ROW) {
+					if (currentRow.getRowNum() == DraftAnalyzerConstants.HEADER_ROW) {
 						continue;
 					}
 					Iterator<Cell> cellIterator = currentRow.iterator();
@@ -67,14 +72,11 @@ public class FileUtils implements DraftAnalyzerConstants {
 					}
 
 					mergedData.add(dataToBeMerged);
-					dataToBeMerged = new ArrayList<String>();
+					dataToBeMerged = new ArrayList<>();
 
 				}
 			}
 
-		} catch (Exception e) {
-			log.error(EXCEL_READ_EXCEPTION_MSG + e.getLocalizedMessage());
-			throw new ExcelReadException(EXCEL_READ_EXCEPTION_MSG + e.getLocalizedMessage());
 		}
 
 		return mergedData;
@@ -88,12 +90,11 @@ public class FileUtils implements DraftAnalyzerConstants {
 	 * @param sheetName
 	 * @param columnHeaderMapping
 	 * @param excelData
-	 * @param object
 	 * @return ByteArrayResource
 	 * @throws IOException
 	 */
 	public static ByteArrayResource writeToExcel(String sheetName, Map<String, String> columnHeaderMapping,
-			List<?> excelData, Object object) {
+			List<?> excelData) {
 		ByteArrayResource excelFileContents = null;
 		try (Workbook workbook = new XSSFWorkbook()) {
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -101,7 +102,7 @@ public class FileUtils implements DraftAnalyzerConstants {
 			Sheet sheet = workbook.createSheet(sheetName);
 
 			Set<String> columnHeaders = writeHeaderRelatedInfo(columnHeaderMapping, workbook, sheet);
-			int rowNum = HEADER_ROW + 1;
+			int rowNum = DraftAnalyzerConstants.HEADER_ROW + 1;
 			for (Object rowDatas : excelData) {
 				rowNum = writeDataAtCellLevel(columnHeaderMapping, sheet, columnHeaders, rowNum, rowDatas);
 			}
@@ -111,8 +112,8 @@ public class FileUtils implements DraftAnalyzerConstants {
 			excelFileContents = new ByteArrayResource(outputStream.toByteArray());
 
 		} catch (IOException e) {
-			log.error(EXCEL_WRITE_EXCEPTION_MSG + e.getLocalizedMessage());
-			throw new ExcelWriteException(EXCEL_WRITE_EXCEPTION_MSG + e.getLocalizedMessage());
+			log.error(DraftAnalyzerConstants.EXCEL_WRITE_EXCEPTION_MSG + e.getLocalizedMessage());
+			throw new ExcelWriteException(DraftAnalyzerConstants.EXCEL_WRITE_EXCEPTION_MSG + e.getLocalizedMessage());
 		}
 
 		return excelFileContents;
@@ -136,7 +137,7 @@ public class FileUtils implements DraftAnalyzerConstants {
 	 */
 	private static int writeDataAtCellLevel(Map<String, String> columnHeaderMapping, Sheet sheet,
 			Set<String> columnHeaders, int rowNum, Object rowDatas) {
-		int columnNum = HEADER_ROW;
+		int columnNum = DraftAnalyzerConstants.HEADER_ROW;
 		Row row = sheet.createRow(rowNum++);
 		for (String columnHeader : columnHeaders) {
 			row.createCell(columnNum++)
@@ -157,10 +158,10 @@ public class FileUtils implements DraftAnalyzerConstants {
 			String columnHeader) {
 		Object rowData = StringUtils.EMPTY;
 		try {
-			Field field = rowDatas.getClass().getDeclaredField(columnHeaderMapping.get(columnHeader));
-			field.setAccessible(true);
+			Field field = ReflectionUtils.findField(rowDatas.getClass(), columnHeaderMapping.get(columnHeader));
+			ReflectionUtils.makeAccessible(field);
 			rowData = field.get(rowDatas);
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+		} catch ( SecurityException | IllegalArgumentException | IllegalAccessException e) {
 			log.error("Unable to read the given field:" + e.getLocalizedMessage());
 		}
 		return StringUtils.EMPTY + rowData;
@@ -179,10 +180,10 @@ public class FileUtils implements DraftAnalyzerConstants {
 		CellStyle headerCellStyle = setCellStyleForHeader(workbook);
 
 		// Create a Row
-		Row headerRow = sheet.createRow(HEADER_ROW);
+		Row headerRow = sheet.createRow(DraftAnalyzerConstants.HEADER_ROW);
 
 		Set<String> columnHeaders = columnHeaderMapping.keySet();
-		int cellCount = HEADER_ROW;
+		int cellCount = DraftAnalyzerConstants.HEADER_ROW;
 		for (String columnHeader : columnHeaders) {
 			Cell cell = headerRow.createCell(cellCount);
 			cell.setCellValue(columnHeader);

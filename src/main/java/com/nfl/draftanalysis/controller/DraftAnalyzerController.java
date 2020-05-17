@@ -1,4 +1,4 @@
-package com.nfl.draftAnalyzer.controller;
+package com.nfl.draftanalysis.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -10,15 +10,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.nfl.draftAnalyzer.constants.DraftAnalyzerConstants;
-import com.nfl.draftAnalyzer.service.DraftAnalyzerService;
+import com.nfl.draftanalysis.constants.DraftAnalyzerConstants;
+import com.nfl.draftanalysis.service.DraftAnalyzerService;
 
 import lombok.extern.log4j.Log4j2;
 
 @RequestMapping(value = "/draft/teamgrades")
 @Controller
 @Log4j2
-public class DraftAnalyzerController implements DraftAnalyzerConstants {
+public class DraftAnalyzerController {
 	private DraftAnalyzerService draftAnalyzerService;
 
 	@Autowired
@@ -28,17 +28,18 @@ public class DraftAnalyzerController implements DraftAnalyzerConstants {
 
 	@GetMapping
 	public ResponseEntity<ByteArrayResource> findAverageDraftGradesForAllRounds(@RequestParam(required = true) int year,
-			@RequestParam(defaultValue = ALL_TEAMS) String team) {
+			@RequestParam(defaultValue = DraftAnalyzerConstants.ALL_TEAMS) String team) {
 		log.info("Entered DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		ByteArrayResource resource = null;
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_VALUE, year));
+		headers.add(HttpHeaders.CONTENT_DISPOSITION,
+				String.format(DraftAnalyzerConstants.CONTENT_DISPOSITION_VALUE, year));
 
 		resource = draftAnalyzerService.findAverageDraftGradesForAllRounds(year, team);
 
 		log.info("Exited DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		return ResponseEntity.ok().headers(headers).contentLength(resource.contentLength())
-				.contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE)).body(resource);
+				.contentType(MediaType.parseMediaType(DraftAnalyzerConstants.EXCEL_MEDIA_TYPE)).body(resource);
 
 	}
 

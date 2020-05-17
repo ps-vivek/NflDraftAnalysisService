@@ -1,4 +1,4 @@
-package com.nfl.draftanalyzer.advice;
+package com.nfl.draftanalysis.advice;
 
 import java.time.LocalDateTime;
 
@@ -7,11 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import com.nfl.draftanalyzer.exception.DraftDataNotFoundException;
-import com.nfl.draftanalyzer.exception.ExcelReadException;
-import com.nfl.draftanalyzer.exception.ExcelWriteException;
-import com.nfl.draftanalyzer.exception.InvalidNflTeamException;
-import com.nfl.draftanalyzer.exception.RestErrorResponse;
+import com.nfl.draftanalysis.exception.DraftDataNotFoundException;
+import com.nfl.draftanalysis.exception.ExcelReadException;
+import com.nfl.draftanalysis.exception.ExcelWriteException;
+import com.nfl.draftanalysis.exception.InvalidNflTeamException;
+import com.nfl.draftanalysis.exception.RestErrorResponse;
 
 import lombok.extern.slf4j.Slf4j;
 

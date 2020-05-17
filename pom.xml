@@ -10,13 +10,18 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.nfl</groupId>
-	<artifactId>draftAnalysis</artifactId>
+	<artifactId>draftanalysis</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>draftAnalyzer</name>
 	<description>Project to analyze the nfl draft picks</description>
 
 	<properties>
 		<java.version>1.8</java.version>
+		<sonar.coverage.exclusions>
+			**/config/*,
+			**/dto/*,
+			**/dao/*
+		</sonar.coverage.exclusions>
 	</properties>
 
 	<dependencies>
