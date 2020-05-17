@@ -24,6 +24,8 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 
 import com.nfl.draftAnalyzer.constants.DraftAnalyzerConstants;
+import com.nfl.draftAnalyzer.exception.ExcelReadException;
+import com.nfl.draftAnalyzer.exception.ExcelWriteException;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -70,12 +72,14 @@ public class FileUtils implements DraftAnalyzerConstants {
 			}
 
 		} catch (Exception e) {
-			log.error("Error while reading file data:" + e.getLocalizedMessage());
+			log.error(EXCEL_READ_EXCEPTION_MSG + e.getLocalizedMessage());
+			throw new ExcelReadException(EXCEL_READ_EXCEPTION_MSG + e.getLocalizedMessage());
 		} finally {
 			try {
 				workbook.close();
 			} catch (IOException e) {
-				log.error("Error while closing workbook:" + e.getLocalizedMessage());
+				log.error(EXCEL_WORKBOOK_CLOSURE_EXCEPTION + e.getLocalizedMessage());
+				throw new ExcelReadException(EXCEL_WORKBOOK_CLOSURE_EXCEPTION + e.getLocalizedMessage());
 			}
 		}
 
@@ -113,7 +117,8 @@ public class FileUtils implements DraftAnalyzerConstants {
 			excelFileContents = new ByteArrayResource(outputStream.toByteArray());
 
 		} catch (IOException e) {
-			log.error("Issue while generating excel file:" + e.getLocalizedMessage());
+			log.error(EXCEL_WRITE_EXCEPTION_MSG + e.getLocalizedMessage());
+			throw new ExcelWriteException(EXCEL_WRITE_EXCEPTION_MSG + e.getLocalizedMessage());
 		}
 
 		return excelFileContents;

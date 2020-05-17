@@ -26,6 +26,7 @@ import com.nfl.draftAnalyzer.dao.NflDraftProspectInfo;
 import com.nfl.draftAnalyzer.dto.AverageProspectGradeInfo;
 import com.nfl.draftAnalyzer.dto.ProspectInfoColumns;
 import com.nfl.draftAnalyzer.exception.DraftDataNotFoundException;
+import com.nfl.draftAnalyzer.exception.InvalidNflTeamException;
 import com.nfl.draftAnalyzer.repo.NflDraftProspectInfoRepo;
 import com.nfl.draftAnalyzer.util.FileUtils;
 
@@ -141,12 +142,17 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 	 * @return
 	 * @throws IOException
 	 */
-	public ByteArrayResource findAverageDraftGradesForAllRounds(int year, String team) throws IOException {
+	public ByteArrayResource findAverageDraftGradesForAllRounds(int year, String team) {
 		log.info("Entered DraftAnalyzerService::findAverageDraftGradesForAllRounds()");
-		
-		if(!draftDataByYear.containsKey(year)) {
-			throw new DraftDataNotFoundException("Draft data unavailable for the year:"+year);
+
+		if (!draftDataByYear.containsKey(year)) {
+			throw new DraftDataNotFoundException(DRAFT_DATA_NOT_FOUND_EXCEPTION + year);
 		}
+
+		if (!ALL_TEAMS.equalsIgnoreCase(team) && !draftAnalyzerConfig.getTeams().contains(team)) {
+			throw new InvalidNflTeamException(INVALID_NFL_TEAM_EXCEPTION_MSG + team);
+		}
+
 		ByteArrayResource resource = null;
 		if (ALL_TEAMS.equalsIgnoreCase(team)) {
 			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, AVERAGE_PROSPECT_GRADE_INFO_COLUMN_MAPPING,
@@ -159,9 +165,7 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 							.collect(Collectors.toList()),
 					AverageProspectGradeInfo.class);
 		}
-		
-		
-		
+
 		log.info("Exited DraftAnalyzerService::findAverageDraftGradesForAllRounds()");
 		return resource;
 
