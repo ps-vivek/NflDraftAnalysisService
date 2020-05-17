@@ -16,19 +16,31 @@ Source: https://www.nfl.com/draft/tracker/prospects?year=2020
 Prospect Grade legends provided by NFL
 ---------------------------------------
 8.0	     The perfect prospect
+---------------------------------
 7.3-7.5	 Perennial All-Pro
+---------------------------------
 7.0-7.1	 Pro Bowl talent
+---------------------------------
 6.7-6.8	 Year 1 quality starter
+---------------------------------
 6.5	     Boom or bust prospect
+---------------------------------
 6.3-6.4	 Will be starter within first two seasons
+---------------------------------
 6.1-6.2	 Good backup who could become starter
+---------------------------------
 6.0	     Developmental traits-based prospect
+---------------------------------
 5.8-5.9	 Backup/special-teamer
+---------------------------------
 5.5-5.6	 Chance to make end of roster or practice squad
+---------------------------------
 5.4	     Priority free agent
+---------------------------------
 5.0-5.1	 Chance to be in an NFL training camp
+---------------------------------
 NO GRADE Likely needs time in developmental league
- 
+--------------------------------- 
 For example, below are the grades of QB prospects in 2017.
 https://www.nfl.com/draft/tracker/prospects/QB?college=allColleges&page=1&status=ALL&year=2017
 --------------------------------------
