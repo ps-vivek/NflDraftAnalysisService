@@ -32,7 +32,7 @@ public class FileUtils implements DraftAnalyzerConstants {
 	 * @param headerNames
 	 * @param noOfRowsToCombine
 	 */
-	public static List<List<String>> fetchExcelData(String fileName, List<String> headerNames) {
+	public static List<List<String>> fetchExcelData(String fileName) {
 		List<List<String>> mergedData = new ArrayList<>();
 		List<String> dataToBeMerged = new ArrayList<String>();
 		Workbook workbook = null;
@@ -43,15 +43,16 @@ public class FileUtils implements DraftAnalyzerConstants {
 			Sheet sheet = workbook.getSheetAt(0);
 			Iterator<Row> iterator = sheet.iterator();
 
-			mergedData.add(headerNames);
-
 			while (iterator.hasNext()) {
 				Row currentRow = iterator.next();
+				if (currentRow.getRowNum() == HEADER_ROW) {
+					continue;
+				}
 				Iterator<Cell> cellIterator = currentRow.iterator();
 
 				while (cellIterator.hasNext()) {
 					Cell currentCell = cellIterator.next();
-					
+
 					if (currentCell.getCellType() == CellType.STRING) {
 						dataToBeMerged.add(currentCell.getStringCellValue());
 					} else if (currentCell.getCellType() == CellType.NUMERIC) {

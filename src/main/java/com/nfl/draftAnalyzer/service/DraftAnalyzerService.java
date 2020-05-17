@@ -23,7 +23,7 @@ import org.springframework.util.MultiValueMap;
 import com.nfl.draftAnalyzer.config.DraftAnalyzerConfig;
 import com.nfl.draftAnalyzer.constants.DraftAnalyzerConstants;
 import com.nfl.draftAnalyzer.dao.NflDraftProspectInfo;
-import com.nfl.draftAnalyzer.dto.ProspectInfo;
+import com.nfl.draftAnalyzer.dto.AverageProspectGradeInfo;
 import com.nfl.draftAnalyzer.dto.ProspectInfoColumns;
 import com.nfl.draftAnalyzer.repo.NflDraftProspectInfoRepo;
 import com.nfl.draftAnalyzer.util.FileUtils;
@@ -44,7 +44,7 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 	@Autowired
 	private NflDraftProspectInfoRepo nflDraftProspectInfoRepo;
 
-	private static Map<Integer, List<ProspectInfo>> draftDataByYear;
+	private static Map<Integer, List<AverageProspectGradeInfo>> draftDataByYear;
 
 	/**
 	 * --Read prospects data from config file and load into db if not present. Then,
@@ -83,9 +83,9 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 	 * @param totalProspectGradesByTeam
 	 * @return
 	 */
-	private List<ProspectInfo> fetchAvgProspectGradeInfoByAllTeams(MultiValueMap<String, String> playersDraftedByTeam,
+	private List<AverageProspectGradeInfo> fetchAvgProspectGradeInfoByAllTeams(MultiValueMap<String, String> playersDraftedByTeam,
 			MultiValueMap<String, Double> totalProspectGradesByTeam) {
-		List<ProspectInfo> avgProspectGradeInfoByAllTeams = new ArrayList<>();
+		List<AverageProspectGradeInfo> avgProspectGradeInfoByAllTeams = new ArrayList<>();
 		for (Entry<String, List<Double>> prospectGradeInfoPerTeam : totalProspectGradesByTeam.entrySet()) {
 			int noOfPlayersDrafted = prospectGradeInfoPerTeam.getValue().size();
 
@@ -94,14 +94,14 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 			Double avgProspectGradeForTeam = totalProspectGradesForTeam
 					/ Double.valueOf(String.valueOf(noOfPlayersDrafted));
 
-			ProspectInfo avgProspectGradeInfoByTeam = new ProspectInfo(noOfPlayersDrafted,
+			AverageProspectGradeInfo avgProspectGradeInfoByTeam = new AverageProspectGradeInfo(noOfPlayersDrafted,
 					prospectGradeInfoPerTeam.getKey(), Precision.round(avgProspectGradeForTeam, ROUNDING_PRECISION),
 					playersDraftedByTeam.get(prospectGradeInfoPerTeam.getKey()).stream()
 							.collect(Collectors.joining(PIPE_DELIMITER)));
 			avgProspectGradeInfoByAllTeams.add(avgProspectGradeInfoByTeam);
 		}
 		// Sorting the list based on average grade scored by the team
-		avgProspectGradeInfoByAllTeams.sort(Comparator.comparingDouble(ProspectInfo::getAverageGrade));
+		avgProspectGradeInfoByAllTeams.sort(Comparator.comparingDouble(AverageProspectGradeInfo::getAverageGrade));
 		return avgProspectGradeInfoByAllTeams;
 	}
 
@@ -157,9 +157,9 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 
 	}
 
-	public static void writeToCsv(PrintWriter writer, List<ProspectInfo> prospectInfosWithAvgGrade) {
+	public static void writeToCsv(PrintWriter writer, List<AverageProspectGradeInfo> prospectInfosWithAvgGrade) {
 		try {
-			StatefulBeanToCsv<ProspectInfo> csvBuilder = new StatefulBeanToCsvBuilder<ProspectInfo>(writer)
+			StatefulBeanToCsv<AverageProspectGradeInfo> csvBuilder = new StatefulBeanToCsvBuilder<AverageProspectGradeInfo>(writer)
 					.withQuotechar(CSVWriter.NO_QUOTE_CHARACTER).withSeparator(COMMA_DELIMITER).build();
 
 			csvBuilder.write(prospectInfosWithAvgGrade);
@@ -181,7 +181,7 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 		boolean recordsPresent = nflDraftProspectInfoRepo.countByYear(year) > 0 ? true : false;
 		if (!recordsPresent) {
 			List<NflDraftProspectInfo> nflDraftProspectInfos = new ArrayList<NflDraftProspectInfo>();
-			for (List<String> prospectInfo : FileUtils.fetchExcelData(fileName, DRAFT_PROSPECT_FILE_HEADERS)) {
+			for (List<String> prospectInfo : FileUtils.fetchExcelData(fileName)) {
 				if (validTeams.contains(prospectInfo.get(ProspectInfoColumns.TEAM.getValue()))) {
 					NflDraftProspectInfo nflDraftProspectInfo = new NflDraftProspectInfo();
 					nflDraftProspectInfo

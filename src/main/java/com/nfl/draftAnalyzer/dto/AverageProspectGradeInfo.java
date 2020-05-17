@@ -9,9 +9,9 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class ProspectInfo {
+public class AverageProspectGradeInfo {
 
-	public ProspectInfo(int noOfPlayers, String teamName, Double averageGrade, String playersDrafted) {
+	public AverageProspectGradeInfo(int noOfPlayers, String teamName, Double averageGrade, String playersDrafted) {
 		super();
 		this.noOfPlayersDrafted = noOfPlayers;
 		this.teamName = teamName;
