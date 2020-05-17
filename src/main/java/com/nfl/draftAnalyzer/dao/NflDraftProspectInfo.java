@@ -21,28 +21,28 @@ public class NflDraftProspectInfo {
 	private Long id;
 
 	@Column(name = "PLAYER")
-	private String Player;
+	private String player;
 
 	@Column(name = "COLLEGE")
-	private String College;
+	private String college;
 
 	@Column(name = "STATUS")
-	private String Status;
+	private String status;
 
 	@Column(name = "POSITION")
-	private String Position;
+	private String position;
 
 	@Column(name = "TEAM")
-	private String Team;
+	private String team;
 
 	@Column(name = "CLASS")
 	private String collegeClass;
 
 	@Column(name = "GRADE")
-	private Double Grade;
+	private Double grade;
 
 	@Column(name = "CONFERENCE")
-	private String Conference;
+	private String conference;
 
 	@Column(name = "YEAR")
 	private int year;

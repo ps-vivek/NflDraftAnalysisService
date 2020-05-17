@@ -2,8 +2,10 @@ package com.nfl.draftAnalyzer.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,7 +26,8 @@ import com.nfl.draftAnalyzer.config.DraftAnalyzerConfig;
 import com.nfl.draftAnalyzer.constants.DraftAnalyzerConstants;
 import com.nfl.draftAnalyzer.dao.NflDraftProspectInfo;
 import com.nfl.draftAnalyzer.dto.AverageProspectGradeInfo;
-import com.nfl.draftAnalyzer.dto.ProspectInfoColumns;
+import com.nfl.draftAnalyzer.dto.AverageProspectGradeMapping;
+import com.nfl.draftAnalyzer.dto.ProspectInfoMapping;
 import com.nfl.draftAnalyzer.exception.DraftDataNotFoundException;
 import com.nfl.draftAnalyzer.exception.InvalidNflTeamException;
 import com.nfl.draftAnalyzer.repo.NflDraftProspectInfoRepo;
@@ -43,6 +46,18 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 	private NflDraftProspectInfoRepo nflDraftProspectInfoRepo;
 
 	private static Map<Integer, List<AverageProspectGradeInfo>> draftDataByYear;
+	private static Map<String, String> averageProspectGradeInfoMapping; 
+
+	private Map<String, String> initAvgProspecGradeMap() {
+		Map<String, String> map = new LinkedHashMap<>();
+		map.put(AverageProspectGradeMapping.TEAM_NAME.name(), AverageProspectGradeMapping.TEAM_NAME.getValue());
+		map.put(AverageProspectGradeMapping.NO_OF_PLAYERS_DRAFTED.name(),
+				AverageProspectGradeMapping.NO_OF_PLAYERS_DRAFTED.getValue());
+		map.put(AverageProspectGradeMapping.AVERAGE_GRADE.name(), AverageProspectGradeMapping.AVERAGE_GRADE.getValue());
+		map.put(AverageProspectGradeMapping.PLAYERS_DRAFTED.name(),
+				AverageProspectGradeMapping.PLAYERS_DRAFTED.getValue());
+		return Collections.unmodifiableMap(map);
+	}
 
 	/**
 	 * --Read prospects data from config file and load into db if not present. Then,
@@ -51,6 +66,7 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 	 */
 	@PostConstruct
 	private void initializeDraftData() {
+		averageProspectGradeInfoMapping = initAvgProspecGradeMap();
 		List<String> validTeams = draftAnalyzerConfig.getTeams();
 		draftAnalyzerConfig.getDraftFilesByYear().forEach((year, fileName) -> {
 			insertProspectsDataToDb(year, validTeams, fileName);
@@ -123,7 +139,7 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 			Double prospectGrade = prospectInfo.getGrade();
 
 			if (prospectGrade != null) {
-				totalProspectGradesByTeam.add(prospectInfo.getTeam(), Double.valueOf(prospectGrade));
+				totalProspectGradesByTeam.add(prospectInfo.getTeam(), prospectGrade);
 			} else {
 				totalProspectGradesByTeam.add(prospectInfo.getTeam(), DEFAULT_PROSPECT_GRADE);
 			}
@@ -155,10 +171,10 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 
 		ByteArrayResource resource = null;
 		if (ALL_TEAMS.equalsIgnoreCase(team)) {
-			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, AVERAGE_PROSPECT_GRADE_INFO_COLUMN_MAPPING,
+			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
 					draftDataByYear.get(year), AverageProspectGradeInfo.class);
 		} else {
-			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, AVERAGE_PROSPECT_GRADE_INFO_COLUMN_MAPPING,
+			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
 					draftDataByYear.get(year).stream()
 							.filter(avgProspectGradeInfoByTeam -> avgProspectGradeInfoByTeam.getTeamName()
 									.equalsIgnoreCase(team))
@@ -184,19 +200,19 @@ public class DraftAnalyzerService implements DraftAnalyzerConstants {
 		if (!recordsPresent) {
 			List<NflDraftProspectInfo> nflDraftProspectInfos = new ArrayList<NflDraftProspectInfo>();
 			for (List<String> prospectInfo : FileUtils.fetchExcelData(fileName)) {
-				if (validTeams.contains(prospectInfo.get(ProspectInfoColumns.TEAM.getValue()))) {
+				if (validTeams.contains(prospectInfo.get(ProspectInfoMapping.TEAM.getValue()))) {
 					NflDraftProspectInfo nflDraftProspectInfo = new NflDraftProspectInfo();
 					nflDraftProspectInfo
-							.setGrade(NumberUtils.isParsable(prospectInfo.get(ProspectInfoColumns.GRADE.getValue()))
-									? Double.valueOf(prospectInfo.get(ProspectInfoColumns.GRADE.getValue()))
+							.setGrade(NumberUtils.isParsable(prospectInfo.get(ProspectInfoMapping.GRADE.getValue()))
+									? Double.valueOf(prospectInfo.get(ProspectInfoMapping.GRADE.getValue()))
 									: DEFAULT_PROSPECT_GRADE);
-					nflDraftProspectInfo.setCollege(prospectInfo.get(ProspectInfoColumns.COLLEGE.getValue()));
-					nflDraftProspectInfo.setCollegeClass(prospectInfo.get(ProspectInfoColumns.CLASS.getValue()));
-					nflDraftProspectInfo.setConference(prospectInfo.get(ProspectInfoColumns.CONFERENCE.getValue()));
-					nflDraftProspectInfo.setPlayer(prospectInfo.get(ProspectInfoColumns.PLAYER.getValue()));
-					nflDraftProspectInfo.setPosition(prospectInfo.get(ProspectInfoColumns.POSITION.getValue()));
-					nflDraftProspectInfo.setStatus(prospectInfo.get(ProspectInfoColumns.STATUS.getValue()));
-					nflDraftProspectInfo.setTeam(prospectInfo.get(ProspectInfoColumns.TEAM.getValue()));
+					nflDraftProspectInfo.setCollege(prospectInfo.get(ProspectInfoMapping.COLLEGE.getValue()));
+					nflDraftProspectInfo.setCollegeClass(prospectInfo.get(ProspectInfoMapping.CLASS.getValue()));
+					nflDraftProspectInfo.setConference(prospectInfo.get(ProspectInfoMapping.CONFERENCE.getValue()));
+					nflDraftProspectInfo.setPlayer(prospectInfo.get(ProspectInfoMapping.PLAYER.getValue()));
+					nflDraftProspectInfo.setPosition(prospectInfo.get(ProspectInfoMapping.POSITION.getValue()));
+					nflDraftProspectInfo.setStatus(prospectInfo.get(ProspectInfoMapping.STATUS.getValue()));
+					nflDraftProspectInfo.setTeam(prospectInfo.get(ProspectInfoMapping.TEAM.getValue()));
 					nflDraftProspectInfo.setYear(year);
 					nflDraftProspectInfos.add(nflDraftProspectInfo);
 				}

@@ -19,11 +19,11 @@ import lombok.extern.log4j.Log4j2;
 @Controller
 @Log4j2
 public class DraftAnalyzerController implements DraftAnalyzerConstants {
-	private DraftAnalyzerService service;
+	private DraftAnalyzerService draftAnalyzerService;
 
 	@Autowired
 	private DraftAnalyzerController(DraftAnalyzerService dService) {
-		this.service = dService;
+		this.draftAnalyzerService = dService;
 	}
 
 	@GetMapping
@@ -34,7 +34,7 @@ public class DraftAnalyzerController implements DraftAnalyzerConstants {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add(HttpHeaders.CONTENT_DISPOSITION, String.format(CONTENT_DISPOSITION_VALUE, year));
 
-		resource = service.findAverageDraftGradesForAllRounds(year, team);
+		resource = draftAnalyzerService.findAverageDraftGradesForAllRounds(year, team);
 
 		log.info("Exited DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		return ResponseEntity.ok().headers(headers).contentLength(resource.contentLength())

@@ -41,46 +41,40 @@ public class FileUtils implements DraftAnalyzerConstants {
 	public static List<List<String>> fetchExcelData(String fileName) {
 		List<List<String>> mergedData = new ArrayList<>();
 		List<String> dataToBeMerged = new ArrayList<String>();
-		Workbook workbook = null;
-		try {
 
-			FileInputStream excelFile = new FileInputStream(new ClassPathResource(fileName).getFile());
-			workbook = new XSSFWorkbook(excelFile);
-			Sheet sheet = workbook.getSheetAt(0);
-			Iterator<Row> iterator = sheet.iterator();
+		try (FileInputStream excelFile = new FileInputStream(new ClassPathResource(fileName).getFile())) {
 
-			while (iterator.hasNext()) {
-				Row currentRow = iterator.next();
-				if (currentRow.getRowNum() == HEADER_ROW) {
-					continue;
-				}
-				Iterator<Cell> cellIterator = currentRow.iterator();
+			try (Workbook workbook = new XSSFWorkbook(excelFile)) {
 
-				while (cellIterator.hasNext()) {
-					Cell currentCell = cellIterator.next();
+				Sheet sheet = workbook.getSheetAt(0);
+				Iterator<Row> iterator = sheet.iterator();
 
-					if (currentCell.getCellType() == CellType.STRING) {
-						dataToBeMerged.add(currentCell.getStringCellValue());
-					} else if (currentCell.getCellType() == CellType.NUMERIC) {
-						dataToBeMerged.add(currentCell.getNumericCellValue() + StringUtils.EMPTY);
+				while (iterator.hasNext()) {
+					Row currentRow = iterator.next();
+					if (currentRow.getRowNum() == HEADER_ROW) {
+						continue;
 					}
+					Iterator<Cell> cellIterator = currentRow.iterator();
+
+					while (cellIterator.hasNext()) {
+						Cell currentCell = cellIterator.next();
+
+						if (currentCell.getCellType() == CellType.STRING) {
+							dataToBeMerged.add(currentCell.getStringCellValue());
+						} else if (currentCell.getCellType() == CellType.NUMERIC) {
+							dataToBeMerged.add(currentCell.getNumericCellValue() + StringUtils.EMPTY);
+						}
+					}
+
+					mergedData.add(dataToBeMerged);
+					dataToBeMerged = new ArrayList<String>();
+
 				}
-
-				mergedData.add(dataToBeMerged);
-				dataToBeMerged = new ArrayList<String>();
-
 			}
 
 		} catch (Exception e) {
 			log.error(EXCEL_READ_EXCEPTION_MSG + e.getLocalizedMessage());
 			throw new ExcelReadException(EXCEL_READ_EXCEPTION_MSG + e.getLocalizedMessage());
-		} finally {
-			try {
-				workbook.close();
-			} catch (IOException e) {
-				log.error(EXCEL_WORKBOOK_CLOSURE_EXCEPTION + e.getLocalizedMessage());
-				throw new ExcelReadException(EXCEL_WORKBOOK_CLOSURE_EXCEPTION + e.getLocalizedMessage());
-			}
 		}
 
 		return mergedData;
