@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.math3.util.Precision;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -28,6 +30,8 @@ import com.nfl.draftanalysis.constants.DraftAnalyzerConstants;
 import com.nfl.draftanalysis.dao.NflDraftProspectInfo;
 import com.nfl.draftanalysis.dto.AverageProspectGradeInfo;
 import com.nfl.draftanalysis.dto.AverageProspectGradeMapping;
+import com.nfl.draftanalysis.dto.DraftRounds;
+import com.nfl.draftanalysis.dto.NflProspectTiers;
 import com.nfl.draftanalysis.dto.ProspectInfoMapping;
 import com.nfl.draftanalysis.exception.DraftDataNotFoundException;
 import com.nfl.draftanalysis.exception.ExcelReadException;
@@ -86,17 +90,26 @@ public class DraftAnalyzerService {
 		});
 
 		draftDataByYear = new HashMap<>();
+
 		draftAnalyzerConfig.getDraftFilesByYear().forEach((year, fileName) -> {
-
-			MultiValueMap<String, String> playersDraftedByTeam = new LinkedMultiValueMap<>();
-			MultiValueMap<String, Double> totalProspectGradesByTeam = fetchTotalProspectGradeByTeam(year,
-					playersDraftedByTeam);
-
-			draftDataByYear.put(year,
-					fetchAvgProspectGradeInfoByAllTeams(playersDraftedByTeam, totalProspectGradesByTeam));
-
+			initializeDraftDataByYear(year);
 		});
 
+	}
+
+	private List<AverageProspectGradeInfo> fetchDraftDataByYearWithStealGrade(Integer year) {
+		MultiValueMap<String, String> playersDraftedByTeamWithStealIndex = new LinkedMultiValueMap<>();
+		MultiValueMap<String, Double> totalProspectGradesByTeamWithStealValue = fetchTotalProspectGradeByTeam(
+				nflDraftProspectInfoRepo.findDraftedPlayersByYear(year), playersDraftedByTeamWithStealIndex, true);
+		return fetchAvgProspectGradeInfoByAllTeams(playersDraftedByTeamWithStealIndex,
+				totalProspectGradesByTeamWithStealValue);
+	}
+
+	private void initializeDraftDataByYear(Integer year) {
+		MultiValueMap<String, String> playersDraftedByTeam = new LinkedMultiValueMap<>();
+		MultiValueMap<String, Double> totalProspectGradesByTeam = fetchTotalProspectGradeByTeam(
+				nflDraftProspectInfoRepo.findByYear(year), playersDraftedByTeam, false);
+		draftDataByYear.put(year, fetchAvgProspectGradeInfoByAllTeams(playersDraftedByTeam, totalProspectGradesByTeam));
 	}
 
 	/**
@@ -142,14 +155,19 @@ public class DraftAnalyzerService {
 	 * @param playersDraftedByTeam
 	 * @return
 	 */
-	private MultiValueMap<String, Double> fetchTotalProspectGradeByTeam(int year,
-			MultiValueMap<String, String> playersDraftedByTeam) {
+	private MultiValueMap<String, Double> fetchTotalProspectGradeByTeam(
+			List<NflDraftProspectInfo> nflDraftProspectInfos, MultiValueMap<String, String> playersDraftedByTeam,
+			boolean includeStealGrade) {
 		MultiValueMap<String, Double> totalProspectGradesByTeam = new LinkedMultiValueMap<>();
 
-		for (NflDraftProspectInfo prospectInfo : nflDraftProspectInfoRepo.findByYear(year)) {
+		for (NflDraftProspectInfo prospectInfo : nflDraftProspectInfos) {
 
 			playersDraftedByTeam.add(prospectInfo.getTeam(), prospectInfo.getPlayer());
 			Double prospectGrade = prospectInfo.getGrade();
+			if (includeStealGrade) {
+				Double playerStealGrade = fetchStealGradeForPlayer(prospectInfo);
+				prospectGrade += playerStealGrade;
+			}
 
 			if (prospectGrade != null) {
 				totalProspectGradesByTeam.add(prospectInfo.getTeam(), prospectGrade);
@@ -234,6 +252,84 @@ public class DraftAnalyzerService {
 			}
 			nflDraftProspectInfoRepo.saveAll(nflDraftProspectInfos);
 		}
+
+	}
+
+	/**
+	 * Finds the average prospect grades for a team amongst the players drafted by
+	 * them in a given year. Include steal grades too. Look at the design doc in git
+	 * to understand how steal grade is calculated
+	 * 
+	 * @param year
+	 * @param team
+	 * @return
+	 * @throws IOException
+	 */
+	@Cacheable("stealgrades")
+	public ByteArrayResource findAverageDraftGradesForAllRoundsWithStealValue(int year, String team) {
+		log.info("Entered DraftAnalyzerService::findAverageDraftGradesForAllRoundsWithStealValue()");
+
+		if (!draftDataByYear.containsKey(year)) {
+			throw new DraftDataNotFoundException(DraftAnalyzerConstants.DRAFT_DATA_NOT_FOUND_EXCEPTION + year);
+		}
+
+		if (!DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)
+				&& !draftAnalyzerConfig.getTeams().contains(team)) {
+			throw new InvalidNflTeamException(DraftAnalyzerConstants.INVALID_NFL_TEAM_EXCEPTION_MSG + team);
+		}
+
+		List<AverageProspectGradeInfo> draftDataByYearWithStealGrade = fetchDraftDataByYearWithStealGrade(year);
+		ByteArrayResource resource = null;
+		if (DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)) {
+			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
+					draftDataByYearWithStealGrade);
+		} else {
+			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
+					draftDataByYearWithStealGrade.stream()
+							.filter(avgProspectGradeInfoByTeam -> avgProspectGradeInfoByTeam.getTeamName()
+									.equalsIgnoreCase(team))
+							.collect(Collectors.toList()));
+		}
+
+		log.info("Exited DraftAnalyzerService::findAverageDraftGradesForAllRoundsWithStealValue()");
+		return resource;
+
+	}
+
+	public Double fetchStealGradeForPlayer(NflDraftProspectInfo playerDraftedByYear) {
+		log.info("Entered DraftAnalyzerService::fetchStealGradeForPlayer()");
+		Double stealValueByDraftedRound = 0d;
+		Double playerGrade = playerDraftedByYear.getGrade();
+		String draftedRound = playerDraftedByYear.getStatus().substring(4, 5);
+		log.info("Drafted round"
+				+draftedRound+"Player name:"+playerDraftedByYear.getPlayer()+"Round:"+playerDraftedByYear.getStatus());
+		String projectedProspectTier = StringUtils.EMPTY;
+		if (playerGrade >= NflProspectTiers.TIER_ONE_PROSPECTS.getValue()) {
+			projectedProspectTier = NflProspectTiers.TIER_ONE_PROSPECTS.name();
+		} else if (playerGrade >= NflProspectTiers.TIER_TWO_PROSPECTS.getValue()) {
+			projectedProspectTier = NflProspectTiers.TIER_TWO_PROSPECTS.name();
+		} else if (playerGrade >= NflProspectTiers.TIER_THREE_PROSPECTS.getValue()) {
+			projectedProspectTier = NflProspectTiers.TIER_THREE_PROSPECTS.name();
+		} else if (playerGrade >= NflProspectTiers.TIER_FOUR_PROSPECTS.getValue()) {
+			projectedProspectTier = NflProspectTiers.TIER_FOUR_PROSPECTS.name();
+		} else if (playerGrade >= NflProspectTiers.TIER_FIVE_PROSPECTS.getValue()) {
+			projectedProspectTier = NflProspectTiers.TIER_FIVE_PROSPECTS.name();
+		}else {
+			return stealValueByDraftedRound;
+		}
+
+		EnumMap<DraftRounds, Double> stealGradeInfoEnumMap = DraftAnalyzerConstants.STEAL_GRADE_INFO
+				.get(projectedProspectTier);
+
+		stealValueByDraftedRound = stealGradeInfoEnumMap
+				.get(DraftRounds.getDraftRoundEnum(Integer.valueOf(draftedRound)));
+
+		String actualProspectTier = DraftAnalyzerConstants.PROSPECT_TIER_AND_DRAFT_RND_MAPPING
+				.get(Integer.valueOf(draftedRound));
+		log.debug(String.format("Projected Prospect Tier:%s, Drafted Round:%s,Prospect Tier:%s, Steal Value:%s",
+				projectedProspectTier, draftedRound, actualProspectTier, stealValueByDraftedRound));
+		log.info("Entered DraftAnalyzerService::fetchStealGradeForPlayer()");
+		return stealValueByDraftedRound;
 
 	}
 }

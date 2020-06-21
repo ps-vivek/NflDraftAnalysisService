@@ -15,7 +15,7 @@ import com.nfl.draftanalysis.service.DraftAnalyzerService;
 
 import lombok.extern.log4j.Log4j2;
 
-@RequestMapping(value = "/draft/teamgrades")
+@RequestMapping(value = "/draft")
 @Controller
 @Log4j2
 public class DraftAnalyzerController {
@@ -27,6 +27,7 @@ public class DraftAnalyzerController {
 	}
 
 	@GetMapping
+	@RequestMapping(value = "/teamgrades")
 	public ResponseEntity<ByteArrayResource> findAverageDraftGradesForAllRounds(@RequestParam(required = true) int year,
 			@RequestParam(defaultValue = DraftAnalyzerConstants.ALL_TEAMS) String team) {
 		log.info("Entered DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
@@ -36,6 +37,24 @@ public class DraftAnalyzerController {
 				String.format(DraftAnalyzerConstants.CONTENT_DISPOSITION_VALUE, year));
 
 		resource = draftAnalyzerService.findAverageDraftGradesForAllRounds(year, team);
+
+		log.info("Exited DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
+		return ResponseEntity.ok().headers(headers).contentLength(resource.contentLength())
+				.contentType(MediaType.parseMediaType(DraftAnalyzerConstants.EXCEL_MEDIA_TYPE)).body(resource);
+
+	}
+	
+	@GetMapping
+	@RequestMapping(value = "/teamgradeswithsteal")
+	public ResponseEntity<ByteArrayResource> findAverageDraftGradesForAllRoundsWithSteal(@RequestParam(required = true) int year,
+			@RequestParam(defaultValue = DraftAnalyzerConstants.ALL_TEAMS) String team) {
+		log.info("Entered DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
+		ByteArrayResource resource = null;
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.CONTENT_DISPOSITION,
+				String.format(DraftAnalyzerConstants.CONTENT_DISPOSITION_VALUE, year));
+
+		resource = draftAnalyzerService.findAverageDraftGradesForAllRoundsWithStealValue(year, team);
 
 		log.info("Exited DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		return ResponseEntity.ok().headers(headers).contentLength(resource.contentLength())
