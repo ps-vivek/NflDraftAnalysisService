@@ -189,9 +189,9 @@ public class DraftAnalyzerService {
 	 * @return
 	 * @throws IOException
 	 */
-	public ByteArrayResource findAverageDraftGradesForAllRounds(int year, String team) {
+	public List<AverageProspectGradeInfo> findAverageDraftGradesForAllRounds(int year, String team) {
 		log.info("Entered DraftAnalyzerService::findAverageDraftGradesForAllRounds()");
-
+		List<AverageProspectGradeInfo> avgProspectGradeInfo = null;
 		if (!draftDataByYear.containsKey(year)) {
 			throw new DraftDataNotFoundException(DraftAnalyzerConstants.DRAFT_DATA_NOT_FOUND_EXCEPTION + year);
 		}
@@ -205,14 +205,15 @@ public class DraftAnalyzerService {
 		if (DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)) {
 			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
 					draftDataByYear.get(year));
+			avgProspectGradeInfo = draftDataByYear.get(year);
 		} else {
-			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
-					draftDataByYear.get(year).stream().filter(avgProspectGradeInfoByTeam -> avgProspectGradeInfoByTeam
-							.getTeamName().equalsIgnoreCase(team)).collect(Collectors.toList()));
+			avgProspectGradeInfo = draftDataByYear.get(year).stream().filter(
+					avgProspectGradeInfoByTeam -> avgProspectGradeInfoByTeam.getTeamName().equalsIgnoreCase(team))
+					.collect(Collectors.toList());
 		}
 
 		log.info("Exited DraftAnalyzerService::findAverageDraftGradesForAllRounds()");
-		return resource;
+		return avgProspectGradeInfo;
 
 	}
 
@@ -266,7 +267,7 @@ public class DraftAnalyzerService {
 	 * @throws IOException
 	 */
 	@Cacheable("stealgrades")
-	public ByteArrayResource findAverageDraftGradesForAllRoundsWithStealValue(int year, String team) {
+	public List<AverageProspectGradeInfo> findAverageDraftGradesForAllRoundsWithStealValue(int year, String team) {
 		log.info("Entered DraftAnalyzerService::findAverageDraftGradesForAllRoundsWithStealValue()");
 
 		if (!draftDataByYear.containsKey(year)) {
@@ -279,20 +280,17 @@ public class DraftAnalyzerService {
 		}
 
 		List<AverageProspectGradeInfo> draftDataByYearWithStealGrade = fetchDraftDataByYearWithStealGrade(year);
-		ByteArrayResource resource = null;
 		if (DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)) {
-			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
-					draftDataByYearWithStealGrade);
+			draftDataByYearWithStealGrade = fetchDraftDataByYearWithStealGrade(year);
 		} else {
-			resource = FileUtils.writeToExcel(StringUtils.EMPTY + year, averageProspectGradeInfoMapping,
-					draftDataByYearWithStealGrade.stream()
-							.filter(avgProspectGradeInfoByTeam -> avgProspectGradeInfoByTeam.getTeamName()
-									.equalsIgnoreCase(team))
-							.collect(Collectors.toList()));
+
+			draftDataByYearWithStealGrade = draftDataByYearWithStealGrade.stream().filter(
+					avgProspectGradeInfoByTeam -> avgProspectGradeInfoByTeam.getTeamName().equalsIgnoreCase(team))
+					.collect(Collectors.toList());
 		}
 
 		log.info("Exited DraftAnalyzerService::findAverageDraftGradesForAllRoundsWithStealValue()");
-		return resource;
+		return draftDataByYearWithStealGrade;
 
 	}
 
@@ -301,8 +299,8 @@ public class DraftAnalyzerService {
 		Double stealValueByDraftedRound = 0d;
 		Double playerGrade = playerDraftedByYear.getGrade();
 		String draftedRound = playerDraftedByYear.getStatus().substring(4, 5);
-		log.info("Drafted round"
-				+draftedRound+"Player name:"+playerDraftedByYear.getPlayer()+"Round:"+playerDraftedByYear.getStatus());
+		log.info("Drafted round" + draftedRound + "Player name:" + playerDraftedByYear.getPlayer() + "Round:"
+				+ playerDraftedByYear.getStatus());
 		String projectedProspectTier = StringUtils.EMPTY;
 		if (playerGrade >= NflProspectTiers.TIER_ONE_PROSPECTS.getValue()) {
 			projectedProspectTier = NflProspectTiers.TIER_ONE_PROSPECTS.name();
@@ -314,7 +312,7 @@ public class DraftAnalyzerService {
 			projectedProspectTier = NflProspectTiers.TIER_FOUR_PROSPECTS.name();
 		} else if (playerGrade >= NflProspectTiers.TIER_FIVE_PROSPECTS.getValue()) {
 			projectedProspectTier = NflProspectTiers.TIER_FIVE_PROSPECTS.name();
-		}else {
+		} else {
 			return stealValueByDraftedRound;
 		}
 
