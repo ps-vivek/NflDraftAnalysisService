@@ -18,9 +18,14 @@ import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.math3.util.Precision;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -31,7 +36,9 @@ import com.nfl.draftanalysis.dao.NflDraftProspectInfo;
 import com.nfl.draftanalysis.dto.AverageProspectGradeInfo;
 import com.nfl.draftanalysis.dto.AverageProspectGradeMapping;
 import com.nfl.draftanalysis.dto.DraftRounds;
+import com.nfl.draftanalysis.dto.NflDraftProspectInfoDto;
 import com.nfl.draftanalysis.dto.NflProspectTiers;
+import com.nfl.draftanalysis.dto.PaginatedProspectDataDto;
 import com.nfl.draftanalysis.dto.ProspectInfoMapping;
 import com.nfl.draftanalysis.exception.DraftDataNotFoundException;
 import com.nfl.draftanalysis.exception.ExcelReadException;
@@ -54,6 +61,9 @@ public class DraftAnalyzerService {
 	private Map<Integer, List<AverageProspectGradeInfo>> draftDataByYear;
 
 	private Map<String, String> averageProspectGradeInfoMapping;
+
+	@Autowired
+	private ModelMapper modelMapper;
 
 	/**
 	 * --Loads the column mapping required for generating the output excel file
@@ -329,5 +339,30 @@ public class DraftAnalyzerService {
 		log.info("Entered DraftAnalyzerService::fetchStealGradeForPlayer()");
 		return stealValueByDraftedRound;
 
+	}
+
+	public PaginatedProspectDataDto fetchProspectGradesData(int year, int pageNumber, int size, String sortField) {
+		Pageable pageable = PageRequest.of(pageNumber, size, Sort.by(sortField).ascending());
+		Page<NflDraftProspectInfo> paginatedProspectsGradeData = nflDraftProspectInfoRepo.findByYear(year, pageable);
+		PaginatedProspectDataDto paginatedResults = setPaginatedResponse(pageNumber, size, paginatedProspectsGradeData);
+		return paginatedResults;
+	}
+
+	private PaginatedProspectDataDto setPaginatedResponse(int pageNumber, int size,
+			Page<NflDraftProspectInfo> paginatedProspectsGradeData) {
+		PaginatedProspectDataDto paginatedResults = new PaginatedProspectDataDto();
+		List<NflDraftProspectInfoDto> paginatedContents = paginatedProspectsGradeData.getContent().stream()
+				.map(this::convertToDto).collect(Collectors.toList());
+		paginatedResults.setContents(paginatedContents);
+		paginatedResults.setNoOfElements(paginatedProspectsGradeData.getNumberOfElements());
+		paginatedResults.setTotalElements(paginatedProspectsGradeData.getTotalElements());
+		paginatedResults.setPageNumber(pageNumber);
+		paginatedResults.setPageSize(size);
+		return paginatedResults;
+	}
+
+	private NflDraftProspectInfoDto convertToDto(NflDraftProspectInfo nflDraftProspectInfo) {
+		NflDraftProspectInfoDto postDto = modelMapper.map(nflDraftProspectInfo, NflDraftProspectInfoDto.class);
+		return postDto;
 	}
 }

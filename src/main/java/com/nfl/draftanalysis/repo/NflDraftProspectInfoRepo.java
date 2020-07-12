@@ -2,6 +2,8 @@ package com.nfl.draftanalysis.repo;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,5 +20,7 @@ public interface NflDraftProspectInfoRepo extends JpaRepository<NflDraftProspect
 
 	@Query("select t from NflDraftProspectInfo t where t.year=:year and t.status is not null order by t.team")
 	List<NflDraftProspectInfo> findDraftedPlayersByYear(@Param("year") int year);
+
+	Page<NflDraftProspectInfo> findByYear(int year, Pageable pageable);
 
 }
