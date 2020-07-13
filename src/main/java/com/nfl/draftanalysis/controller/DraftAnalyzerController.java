@@ -34,13 +34,13 @@ public class DraftAnalyzerController {
 	public ResponseEntity<List<AverageProspectGradeInfo>> findAverageDraftGradesForAllRounds(
 			@RequestParam(required = true) int year,
 			@RequestParam(defaultValue = DraftAnalyzerConstants.ALL_TEAMS) String team,
-			@RequestParam(required = true) boolean includeStealGrade) {
+			@RequestParam(required = true, name = "stealgrade") boolean includeStealGrade) {
 		log.info("Entered DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		List<AverageProspectGradeInfo> resource = null;
-		if (includeStealGrade)
+		if (!includeStealGrade)
 			resource = draftAnalyzerService.findAverageDraftGradesForAllRounds(year, team);
 		else
-			draftAnalyzerService.findAverageDraftGradesForAllRoundsWithStealValue(year, team);
+			resource = draftAnalyzerService.findAverageDraftGradesForAllRoundsWithStealValue(year, team);
 		log.info("Exited DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		return ResponseEntity.ok().body(resource);
 
