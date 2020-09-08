@@ -20,6 +20,94 @@ draft:
     2016: Nfl_Draft_Prospects_2016.xlsx
     2015: Nfl_Draft_Prospects_2015.xlsx
     2014: Nfl_Draft_Prospects_2014.xlsx
+  positionGroupings:
+    offensiveLine: 
+      - OL
+      - C
+      - T
+      - OT
+      - G
+      - OG
+    skillPosition: 
+      - QB
+      - WR
+      - TE
+      - RB
+      - FB
+    defensiveBack: 
+      - DB
+      - CB
+      - FS
+      - S
+      - SS
+    defensiveLine: 
+      - DL
+      - EDGE
+      - DE
+      - DT
+      - NT
+    lineBackers: 
+      - OLB
+      - LB
+      - ILB   
+    specialTeams: 
+      - LS
+      - P
+      - K
+    all: 
+      - OL
+      - C
+      - T
+      - OT
+      - G
+      - OG 
+      - QB
+      - WR
+      - TE
+      - RB
+      - FB 
+      - DB
+      - CB
+      - FS
+      - S
+      - SS 
+      - DL
+      - EDGE
+      - DE
+      - DT
+      - NT 
+      - OLB
+      - LB
+      - ILB    
+      - LS
+      - P
+      - K
+    offense: 
+      - OL
+      - C
+      - T
+      - OT
+      - G
+      - OG 
+      - QB
+      - WR
+      - TE
+      - RB
+      - FB 
+    defense: 
+      - DB
+      - CB
+      - FS
+      - S
+      - SS 
+      - DL
+      - EDGE
+      - DE
+      - DT
+      - NT 
+      - OLB
+      - LB
+      - ILB    
   draftRounds:
     - Rnd 1
     - Rnd 2

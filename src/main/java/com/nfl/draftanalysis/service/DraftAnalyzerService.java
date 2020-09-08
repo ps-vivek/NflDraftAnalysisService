@@ -10,12 +10,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Precision;
 import org.modelmapper.ModelMapper;
@@ -61,7 +63,7 @@ public class DraftAnalyzerService {
 	private NflDraftProspectInfoRepo nflDraftProspectInfoRepo;
 
 	@Autowired
-	private OverallTeamStandingsByYearRepo repo;
+	private OverallTeamStandingsByYearRepo overallTeamStandingByYearRepo;
 
 	private Map<String, String> averageProspectGradeInfoMapping;
 
@@ -137,7 +139,7 @@ public class DraftAnalyzerService {
 				log.error("Error while inserting overall team standings per year into db:" + e.getLocalizedMessage());
 			}
 			log.debug("Size:" + overallTeamStandings.size());
-			repo.saveAll(overallTeamStandings);
+			overallTeamStandingByYearRepo.saveAll(overallTeamStandings);
 		});
 
 	}
@@ -158,8 +160,7 @@ public class DraftAnalyzerService {
 		log.info("Entered DraftAnalyzerService::findAverageDraftGradesForAllRoundsWithStealValue()");
 		validateInputYearAndTeam(year, team);
 
-		List<String> teamsToQuery = DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)
-				? draftAnalyzerConfig.getTeams()
+		List<String> teamsToQuery = DraftAnalyzerConstants.ALL.equalsIgnoreCase(team) ? draftAnalyzerConfig.getTeams()
 				: Arrays.asList(team);
 
 		List<AverageProspectGradeInfo> draftDataByYearWithStealGrade = fetchDraftData(
@@ -176,8 +177,7 @@ public class DraftAnalyzerService {
 			throw new DraftDataNotFoundException(DraftAnalyzerConstants.DRAFT_DATA_NOT_FOUND_EXCEPTION + year);
 		}
 
-		if (!DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)
-				&& !draftAnalyzerConfig.getTeams().contains(team)) {
+		if (!DraftAnalyzerConstants.ALL.equalsIgnoreCase(team) && !draftAnalyzerConfig.getTeams().contains(team)) {
 			throw new InvalidNflTeamException(DraftAnalyzerConstants.INVALID_NFL_TEAM_EXCEPTION_MSG + team);
 		}
 	}
@@ -334,25 +334,30 @@ public class DraftAnalyzerService {
 	}
 
 	public List<AverageProspectGradeInfo> fetchTeamGradesWithOverallStandings(Integer year, String team,
-			boolean stealGrade, List<String> draftedRounds) {
+			boolean stealGrade, List<String> draftedRounds, String positionGroupings) {
 		MultiValueMap<String, String> playersDraftedByTeamWithStealIndex = new LinkedMultiValueMap<>();
-		List<String> teamsToQuery = DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)
-				? draftAnalyzerConfig.getTeams()
+		List<String> teamsToQuery = DraftAnalyzerConstants.ALL.equalsIgnoreCase(team) ? draftAnalyzerConfig.getTeams()
 				: Arrays.asList(team);
 
-		List<String> draftRoundsToquery = DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)
-				? draftAnalyzerConfig.getDraftRounds()
-				: draftedRounds;
+		List<String> draftRoundsToquery = Objects.nonNull(draftedRounds) && !CollectionUtils.isEmpty(draftedRounds)
+				? draftedRounds
+				: draftAnalyzerConfig.getDraftRounds();
 
+		List<String> positionsToQuery = Objects.isNull(positionGroupings)
+				? draftAnalyzerConfig.getPositionGroupings().get(DraftAnalyzerConstants.ALL)
+				: draftAnalyzerConfig.getPositionGroupings().get(positionGroupings);
+
+		log.info("Teams:{},Year:{},DraftRounds:{},Positions:{}", teamsToQuery, year, draftRoundsToquery,
+				positionsToQuery);
 		List<NflDraftProspectInfo> draftDataByYearWithStealGrade = nflDraftProspectInfoRepo
-				.findDraftedPlayersByYearAndTeamAndRound(year, teamsToQuery, draftRoundsToquery);
+				.findDraftedPlayersByYearAndTeamAndRound(year, teamsToQuery, draftRoundsToquery, positionsToQuery);
 
 		MultiValueMap<String, GradeBreakDown> totalProspectGradesByTeamWithStealValue = fetchTotalProspectGradeByTeam(
 				draftDataByYearWithStealGrade, playersDraftedByTeamWithStealIndex, stealGrade);
 		List<AverageProspectGradeInfo> fetchAvgProspectGradeInfoByAllTeams = fetchAvgProspectGradeInfoByAllTeams(
 				playersDraftedByTeamWithStealIndex, totalProspectGradesByTeamWithStealValue);
 		fetchAvgProspectGradeInfoByAllTeams.forEach(averageProspectInfo -> {
-			OverallTeamStandingsByYear overallTeamStandingsByYear = repo
+			OverallTeamStandingsByYear overallTeamStandingsByYear = overallTeamStandingByYearRepo
 					.findByTeamAndYear(averageProspectInfo.getTeamName(), year);
 			averageProspectInfo.setConference(overallTeamStandingsByYear.getConference());
 			averageProspectInfo.setSeed(overallTeamStandingsByYear.getSeed());

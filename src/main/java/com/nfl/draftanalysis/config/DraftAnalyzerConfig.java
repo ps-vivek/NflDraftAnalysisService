@@ -20,6 +20,8 @@ import lombok.Setter;
 public class DraftAnalyzerConfig {
 	private Map<Integer, String> draftFilesByYear = new HashMap<>();
 	
+	private Map<String, List<String>> positionGroupings = new HashMap<String, List<String>>();
+	
 	private List<String> teams = new ArrayList<>();
 	
 	private List<String> draftRounds = new ArrayList<>();
