@@ -20,6 +20,14 @@ draft:
     2016: Nfl_Draft_Prospects_2016.xlsx
     2015: Nfl_Draft_Prospects_2015.xlsx
     2014: Nfl_Draft_Prospects_2014.xlsx
+  draftRounds:
+    - Rnd 1
+    - Rnd 2
+    - Rnd 3
+    - Rnd 4
+    - Rnd 5
+    - Rnd 6
+    - Rnd 7
   teams:
     - Arizona Cardinals
     - Atlanta Falcons

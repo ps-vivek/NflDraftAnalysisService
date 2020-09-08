@@ -60,4 +60,23 @@ public class DraftAnalyzerController {
 
 	}
 
+	@GetMapping
+	@RequestMapping(value = "/teamgradeswithoverallstandings")
+	public ResponseEntity<List<AverageProspectGradeInfo>> fetchTeamGradesWithOverallStandings(
+			@RequestParam(required = true) int year,
+			@RequestParam(defaultValue = DraftAnalyzerConstants.ALL_TEAMS) String team,
+			@RequestParam(required = true, name = "stealgrade") boolean includeStealGrade,
+			@RequestParam(defaultValue = DraftAnalyzerConstants.ALL_TEAMS) List<String> draftedRounds
+			
+			) {
+		log.info("Entered DraftAnalyzerController::fetchTeamGradesWithOverallStandings()");
+		List<AverageProspectGradeInfo> resource = null;
+		if (!includeStealGrade)
+			resource = draftAnalyzerService.fetchTeamGradesWithOverallStandings(year, team, false, draftedRounds);
+		else
+			resource = draftAnalyzerService.fetchTeamGradesWithOverallStandings(year, team, true, draftedRounds);
+		log.info("Exited DraftAnalyzerController::fetchTeamGradesWithOverallStandings()");
+		return ResponseEntity.ok().body(resource);
+
+	}
 }

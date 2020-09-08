@@ -18,4 +18,8 @@ public class GradeBreakDown {
 	private Double prospectGradeWithoutStealIndex;
 	
 	private String playerName;
+	
+	private String draftedRound;
+	
+	private String playerPosition;
 }

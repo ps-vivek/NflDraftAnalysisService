@@ -10,6 +10,7 @@ CREATE TABLE nfl_draft_prospect_info
      class      VARCHAR(50), 
      grade      FLOAT, 
      conference VARCHAR(100), 
+     draftedRound VARCHAR(10),
      PRIMARY KEY (id) 
   ); 
 

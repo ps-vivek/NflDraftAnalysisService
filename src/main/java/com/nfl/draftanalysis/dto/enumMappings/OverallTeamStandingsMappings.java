@@ -1,4 +1,4 @@
-package com.nfl.draftanalysis.dto;
+package com.nfl.draftanalysis.dto.enumMappings;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

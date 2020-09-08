@@ -34,13 +34,13 @@ import com.nfl.draftanalysis.constants.DraftAnalyzerConstants;
 import com.nfl.draftanalysis.dao.NflDraftProspectInfo;
 import com.nfl.draftanalysis.dao.OverallTeamStandingsByYear;
 import com.nfl.draftanalysis.dto.AverageProspectGradeInfo;
-import com.nfl.draftanalysis.dto.AverageProspectGradeMapping;
-import com.nfl.draftanalysis.dto.DraftRounds;
 import com.nfl.draftanalysis.dto.GradeBreakDown;
 import com.nfl.draftanalysis.dto.NflDraftProspectInfoDto;
-import com.nfl.draftanalysis.dto.NflProspectTiers;
 import com.nfl.draftanalysis.dto.PaginatedProspectDataDto;
-import com.nfl.draftanalysis.dto.ProspectInfoMapping;
+import com.nfl.draftanalysis.dto.enumMappings.AverageProspectGradeMapping;
+import com.nfl.draftanalysis.dto.enumMappings.DraftRounds;
+import com.nfl.draftanalysis.dto.enumMappings.NflProspectTiers;
+import com.nfl.draftanalysis.dto.enumMappings.ProspectInfoMapping;
 import com.nfl.draftanalysis.exception.DraftDataNotFoundException;
 import com.nfl.draftanalysis.exception.ExcelReadException;
 import com.nfl.draftanalysis.exception.InvalidNflTeamException;
@@ -257,11 +257,11 @@ public class DraftAnalyzerService {
 			Double prospectGradeWithStealIndex = includeStealGrade ? (prospectGradeWithoutStealIndex + playerStealGrade)
 					: prospectGradeWithoutStealIndex;
 
-			totalProspectGradesByTeam.add(prospectInfo.getTeam(),
-					GradeBreakDown.builder().prospectGradeWithoutStealIndex(prospectGradeWithoutStealIndex)
-							.stealIndex(playerStealGrade).prospectGradeWithStealIndex(prospectGradeWithStealIndex)
-							.playerName(prospectInfo.getPlayer())
-							.prospectGradeWithoutStealIndex(prospectGradeWithoutStealIndex).build());
+			totalProspectGradesByTeam.add(prospectInfo.getTeam(), GradeBreakDown.builder()
+					.prospectGradeWithoutStealIndex(prospectGradeWithoutStealIndex).stealIndex(playerStealGrade)
+					.prospectGradeWithStealIndex(prospectGradeWithStealIndex).playerName(prospectInfo.getPlayer())
+					.prospectGradeWithoutStealIndex(prospectGradeWithoutStealIndex)
+					.draftedRound(prospectInfo.getDraftedRound()).playerPosition(prospectInfo.getPosition()).build());
 		});
 
 		return totalProspectGradesByTeam;
@@ -333,4 +333,36 @@ public class DraftAnalyzerService {
 		return postDto;
 	}
 
+	public List<AverageProspectGradeInfo> fetchTeamGradesWithOverallStandings(Integer year, String team,
+			boolean stealGrade, List<String> draftedRounds) {
+		MultiValueMap<String, String> playersDraftedByTeamWithStealIndex = new LinkedMultiValueMap<>();
+		List<String> teamsToQuery = DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)
+				? draftAnalyzerConfig.getTeams()
+				: Arrays.asList(team);
+
+		List<String> draftRoundsToquery = DraftAnalyzerConstants.ALL_TEAMS.equalsIgnoreCase(team)
+				? draftAnalyzerConfig.getDraftRounds()
+				: draftedRounds;
+
+		List<NflDraftProspectInfo> draftDataByYearWithStealGrade = nflDraftProspectInfoRepo
+				.findDraftedPlayersByYearAndTeamAndRound(year, teamsToQuery, draftRoundsToquery);
+
+		MultiValueMap<String, GradeBreakDown> totalProspectGradesByTeamWithStealValue = fetchTotalProspectGradeByTeam(
+				draftDataByYearWithStealGrade, playersDraftedByTeamWithStealIndex, stealGrade);
+		List<AverageProspectGradeInfo> fetchAvgProspectGradeInfoByAllTeams = fetchAvgProspectGradeInfoByAllTeams(
+				playersDraftedByTeamWithStealIndex, totalProspectGradesByTeamWithStealValue);
+		fetchAvgProspectGradeInfoByAllTeams.forEach(averageProspectInfo -> {
+			OverallTeamStandingsByYear overallTeamStandingsByYear = repo
+					.findByTeamAndYear(averageProspectInfo.getTeamName(), year);
+			averageProspectInfo.setConference(overallTeamStandingsByYear.getConference());
+			averageProspectInfo.setSeed(overallTeamStandingsByYear.getSeed());
+			averageProspectInfo.setWins(overallTeamStandingsByYear.getWins());
+			averageProspectInfo.setLoss(overallTeamStandingsByYear.getLoss());
+			averageProspectInfo.setTies(overallTeamStandingsByYear.getTies());
+			averageProspectInfo.setReason(overallTeamStandingsByYear.getReason());
+			averageProspectInfo.setPosition(overallTeamStandingsByYear.getPosition());
+		});
+		return fetchAvgProspectGradeInfoByAllTeams;
+
+	}
 }

@@ -12,11 +12,12 @@ import javax.persistence.Table;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import com.nfl.draftanalysis.constants.DraftAnalyzerConstants;
-import com.nfl.draftanalysis.dto.ProspectInfoMapping;
+import com.nfl.draftanalysis.dto.enumMappings.ProspectInfoMapping;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
@@ -25,6 +26,7 @@ import lombok.Setter;
 @Table(name = "nfl_draft_prospect_info")
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class NflDraftProspectInfo {
 
 	@Id
@@ -58,6 +60,9 @@ public class NflDraftProspectInfo {
 	@Column(name = "YEAR")
 	private int year;
 
+	@Column(name = "DRAFTEDROUND")
+	private String draftedRound;
+
 	public static NflDraftProspectInfo prepareNflProspectsDataForInsertion(Integer year, List<String> prospectInfo) {
 		return NflDraftProspectInfo.builder()
 				.grade(NumberUtils.isParsable(prospectInfo.get(ProspectInfoMapping.GRADE.getValue()))
@@ -69,6 +74,7 @@ public class NflDraftProspectInfo {
 				.player(prospectInfo.get(ProspectInfoMapping.PLAYER.getValue()))
 				.position(prospectInfo.get(ProspectInfoMapping.POSITION.getValue()))
 				.status(prospectInfo.get(ProspectInfoMapping.STATUS.getValue()))
-				.team(prospectInfo.get(ProspectInfoMapping.TEAM.getValue())).year(year).build();
+				.team(prospectInfo.get(ProspectInfoMapping.TEAM.getValue())).year(year)
+				.draftedRound(prospectInfo.get(ProspectInfoMapping.STATUS.getValue()).substring(0, 5)).build();
 	}
 }

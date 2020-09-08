@@ -72,8 +72,7 @@ public class FileUtils {
 							dataToBeMerged.add(currentCell.getStringCellValue());
 						} else if (currentCell.getCellType() == CellType.NUMERIC) {
 							double numericCellValue = currentCell.getNumericCellValue();
-							
-							dataToBeMerged.add(String.valueOf((int)(numericCellValue)));
+							dataToBeMerged.add(String.valueOf(numericCellValue));
 						}
 					}
 

@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
 
-import com.nfl.draftanalysis.dto.OverallTeamStandingsMappings;
+import com.nfl.draftanalysis.dto.enumMappings.OverallTeamStandingsMappings;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -73,12 +73,12 @@ public class OverallTeamStandingsByYear implements Serializable {
 
 	public static OverallTeamStandingsByYear prepareOverallStandingsByYearDataForInsertion(List<String> prospectInfo) {
 		return OverallTeamStandingsByYear.builder()
-				.seed(Integer.valueOf(prospectInfo.get(OverallTeamStandingsMappings.SEED.getValue())))
+				.seed((int) Double.parseDouble(prospectInfo.get(OverallTeamStandingsMappings.SEED.getValue())))
 				.conference(prospectInfo.get(OverallTeamStandingsMappings.CONFERENCE.getValue()))
-				.wins(Integer.valueOf(prospectInfo.get(OverallTeamStandingsMappings.WINS.getValue())))
-				.loss(Integer.valueOf(prospectInfo.get(OverallTeamStandingsMappings.LOSS.getValue())))
-				.ties(Integer.valueOf(prospectInfo.get(OverallTeamStandingsMappings.TIES.getValue())))
-				.year(Integer.valueOf(prospectInfo.get(OverallTeamStandingsMappings.YEAR.getValue())))
+				.wins((int) Double.parseDouble(prospectInfo.get(OverallTeamStandingsMappings.WINS.getValue())))
+				.loss((int) Double.parseDouble(prospectInfo.get(OverallTeamStandingsMappings.LOSS.getValue())))
+				.ties((int) Double.parseDouble(prospectInfo.get(OverallTeamStandingsMappings.TIES.getValue())))
+				.year((int) Double.parseDouble(prospectInfo.get(OverallTeamStandingsMappings.YEAR.getValue())))
 				.team(prospectInfo.get(OverallTeamStandingsMappings.TEAM.getValue()))
 				.position(prospectInfo.get(OverallTeamStandingsMappings.POSITION.getValue()))
 				.reason(prospectInfo.get(OverallTeamStandingsMappings.REASON.getValue())).build();

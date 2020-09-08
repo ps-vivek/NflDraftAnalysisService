@@ -18,10 +18,9 @@ import lombok.Setter;
 @EnableConfigurationProperties
 @ConfigurationProperties("draft")
 public class DraftAnalyzerConfig {
-
-
 	private Map<Integer, String> draftFilesByYear = new HashMap<>();
 	
 	private List<String> teams = new ArrayList<>();
-
+	
+	private List<String> draftRounds = new ArrayList<>();
 }

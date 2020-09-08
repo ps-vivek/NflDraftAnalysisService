@@ -4,9 +4,9 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.nfl.draftanalysis.dto.DraftRounds;
-import com.nfl.draftanalysis.dto.NflProspectTiers;
-import com.nfl.draftanalysis.dto.StealGrades;
+import com.nfl.draftanalysis.dto.enumMappings.DraftRounds;
+import com.nfl.draftanalysis.dto.enumMappings.NflProspectTiers;
+import com.nfl.draftanalysis.dto.enumMappings.StealGrades;
 
 public class DraftAnalyzerConstants {
 
