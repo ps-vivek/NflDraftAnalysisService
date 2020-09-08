@@ -38,9 +38,9 @@ public class DraftAnalyzerController {
 		log.info("Entered DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		List<AverageProspectGradeInfo> resource = null;
 		if (!includeStealGrade)
-			resource = draftAnalyzerService.findAverageDraftGradesForAllRounds(year, team);
+			resource = draftAnalyzerService.findAverageDraftGradesForAllRoundsWithStealValue(year, team, false);
 		else
-			resource = draftAnalyzerService.findAverageDraftGradesForAllRoundsWithStealValue(year, team);
+			resource = draftAnalyzerService.findAverageDraftGradesForAllRoundsWithStealValue(year, team, true);
 		log.info("Exited DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		return ResponseEntity.ok().body(resource);
 

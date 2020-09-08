@@ -18,8 +18,8 @@ public interface NflDraftProspectInfoRepo extends JpaRepository<NflDraftProspect
 
 	List<NflDraftProspectInfo> findByYear(int year);
 
-	@Query("select t from NflDraftProspectInfo t where t.year=:year and t.status is not null order by t.team")
-	List<NflDraftProspectInfo> findDraftedPlayersByYear(@Param("year") int year);
+	@Query("select t from NflDraftProspectInfo t where t.year=:year and t.team in (:team) and t.status is not null order by t.team")
+	List<NflDraftProspectInfo> findDraftedPlayersByYear(@Param("year") int year, @Param("team") List<String> team);
 
 	Page<NflDraftProspectInfo> findByYear(int year, Pageable pageable);
 
