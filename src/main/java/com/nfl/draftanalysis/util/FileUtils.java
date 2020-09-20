@@ -12,10 +12,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -43,15 +46,16 @@ public class FileUtils {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public static List<List<String>> fetchExcelData(String fileName) throws IOException {
+	public static List<List<String>> fetchExcelData(String fileName, String sheetName) throws IOException {
 		List<List<String>> mergedData = new ArrayList<>();
 		List<String> dataToBeMerged = new ArrayList<>();
 
 		try (FileInputStream excelFile = new FileInputStream(new ClassPathResource(fileName).getFile())) {
 
-			try (Workbook workbook = new XSSFWorkbook(excelFile)) {
-
-				Sheet sheet = workbook.getSheetAt(0);
+			try (Workbook workbook = new XSSFWorkbook(excelFile)) {		
+				
+				
+				Sheet sheet = workbook.getSheet(sheetName);
 				Iterator<Row> iterator = sheet.iterator();
 
 				while (iterator.hasNext()) {
@@ -67,7 +71,8 @@ public class FileUtils {
 						if (currentCell.getCellType() == CellType.STRING) {
 							dataToBeMerged.add(currentCell.getStringCellValue());
 						} else if (currentCell.getCellType() == CellType.NUMERIC) {
-							dataToBeMerged.add(currentCell.getNumericCellValue() + StringUtils.EMPTY);
+							double numericCellValue = currentCell.getNumericCellValue();
+							dataToBeMerged.add(String.valueOf(numericCellValue));
 						}
 					}
 

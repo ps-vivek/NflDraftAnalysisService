@@ -33,14 +33,14 @@ public class DraftAnalyzerController {
 	@RequestMapping(value = "/teamgrades")
 	public ResponseEntity<List<AverageProspectGradeInfo>> findAverageDraftGradesForAllRounds(
 			@RequestParam(required = true) int year,
-			@RequestParam(defaultValue = DraftAnalyzerConstants.ALL_TEAMS) String team,
+			@RequestParam(defaultValue = DraftAnalyzerConstants.ALL) String team,
 			@RequestParam(required = true, name = "stealgrade") boolean includeStealGrade) {
 		log.info("Entered DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		List<AverageProspectGradeInfo> resource = null;
 		if (!includeStealGrade)
-			resource = draftAnalyzerService.findAverageDraftGradesForAllRounds(year, team);
+			resource = draftAnalyzerService.findAverageDraftGradesForAllRoundsWithStealValue(year, team, false);
 		else
-			resource = draftAnalyzerService.findAverageDraftGradesForAllRoundsWithStealValue(year, team);
+			resource = draftAnalyzerService.findAverageDraftGradesForAllRoundsWithStealValue(year, team, true);
 		log.info("Exited DraftAnalyzerController::findAverageDraftGradesForAllRounds()");
 		return ResponseEntity.ok().body(resource);
 
@@ -60,4 +60,24 @@ public class DraftAnalyzerController {
 
 	}
 
+	@GetMapping
+	@RequestMapping(value = "/teamgradeswithoverallstandings")
+	public ResponseEntity<List<AverageProspectGradeInfo>> fetchTeamGradesWithOverallStandings(
+			@RequestParam(required = true) int year,
+			@RequestParam(defaultValue = DraftAnalyzerConstants.ALL) String team,
+			@RequestParam(required = true, name = "stealgrade") boolean includeStealGrade,
+			@RequestParam(required = false) List<String> draftedRounds,
+			@RequestParam(required = false) String position) {
+		log.info("Entered DraftAnalyzerController::fetchTeamGradesWithOverallStandings()");
+		List<AverageProspectGradeInfo> resource = null;
+		if (!includeStealGrade)
+			resource = draftAnalyzerService.fetchTeamGradesWithOverallStandings(year, team, false, draftedRounds,
+					position);
+		else
+			resource = draftAnalyzerService.fetchTeamGradesWithOverallStandings(year, team, true, draftedRounds,
+					position);
+		log.info("Exited DraftAnalyzerController::fetchTeamGradesWithOverallStandings()");
+		return ResponseEntity.ok().body(resource);
+
+	}
 }

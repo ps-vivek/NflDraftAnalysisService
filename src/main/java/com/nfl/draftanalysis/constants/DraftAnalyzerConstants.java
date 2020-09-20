@@ -4,9 +4,9 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.nfl.draftanalysis.dto.DraftRounds;
-import com.nfl.draftanalysis.dto.NflProspectTiers;
-import com.nfl.draftanalysis.dto.StealGrades;
+import com.nfl.draftanalysis.dto.enumMappings.DraftRounds;
+import com.nfl.draftanalysis.dto.enumMappings.NflProspectTiers;
+import com.nfl.draftanalysis.dto.enumMappings.StealGrades;
 
 public class DraftAnalyzerConstants {
 
@@ -17,7 +17,7 @@ public class DraftAnalyzerConstants {
 	public static final Double DEFAULT_PROSPECT_GRADE = 0d;
 	public static final String COMMA_DELIMITER = ",";
 	public static final int ROUNDING_PRECISION = 2;
-	public static final String ALL_TEAMS = "all";
+	public static final String ALL = "all";
 	public static final int HEADER_ROW = 0;
 
 	public static final String CONTENT_DISPOSITION_VALUE = "attachment; filename=Average_Draft_Grade_Results_%s.xlsx";
